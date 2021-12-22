@@ -1,0 +1,197 @@
+var database;
+
+var returnButton;
+
+var nameBox;
+var nameLabel;
+
+var recieverBox;
+var recieverLabel;
+
+var passwordBox;
+var passwordLabel;
+
+var goldStarAmountBox;
+var goldstarAmountBoxLabel;
+
+var submitButton;
+var spamProtection;
+var spamProtectionLabel;
+var spamProtectionBox;
+var spamProtectionButton;
+
+var a;
+var b;
+var c;
+var d;
+var e;
+var f;
+var g;
+var h;
+var j;
+
+var errorMessageLabel;
+var pkt;
+
+var reloadButton;
+function setup(){
+    createCanvas(1000,1000)
+
+    database = firebase.database()
+
+    
+
+    returnButton = createButton('Return to the homepage!')
+    returnButton.position(50,60)
+    returnButton.mouseClicked(redirectA)
+
+    nameLabel = createElement('p','Type in your first name, in all lowercase letters, and the first letter of your last name after it. Example: aarnavs or samd')
+    nameLabel.position(200,150)
+
+    nameBox = createInput('')
+    nameBox.position(200,200)
+
+    recieverLabel = createElement('p',"Type in the name of the reciever, using the same format above. Example: charliew, mariskas")
+    recieverLabel.position(200,250)
+
+    recieverBox = createInput('')
+    recieverBox.position(200,300)
+
+    passwordLabel = createElement('p',"Type in your passphrase; if you don't know it, ask or email Aarnav.")
+    passwordLabel.position(200,350)
+
+    passwordBox = createInput('','password')
+    passwordBox.position(200,400)
+
+    goldStarAmountLabel = createElement('p',"Type in the amount of goldstars you would like to transfer, you must have enough to send.")
+    goldStarAmountLabel.position(200,450)
+
+    goldStarAmountBox = createInput('')
+    goldStarAmountBox.position(200,500)
+
+    submitButton = createButton('Submit transfer!')
+    submitButton.position(200,520)
+    submitButton.mouseClicked(iAmNotARobot)
+
+
+
+
+}
+
+function redirectA(){
+    location.assign("index.html")
+}
+
+function iAmNotARobot(){
+
+    a = nameBox.value() 
+    console.log(a)
+    b = recieverBox.value()
+    console.log(b)
+    c = passwordBox.value()
+    console.log(c)
+    d = parseInt(goldStarAmountBox.value())
+    console.log(d)
+
+    submitButton.hide()
+    nameLabel.hide()
+    nameBox.hide()
+    recieverBox.hide()
+    recieverLabel.hide()
+    goldStarAmountBox.hide()
+    goldStarAmountLabel.hide()
+    passwordBox.hide()
+    passwordLabel.hide()
+
+
+
+    spamProtection = Math.floor((Math.random() * 10) + 1);
+    
+    spamProtectionLabel = createElement('p','Please type in the random number shown to complete the transaction. Random number: '+spamProtection)
+    spamProtectionLabel.position(200,150)
+
+    spamProtectionBox = createInput('')
+    spamProtectionBox.position(200,200)
+
+    spamProtectionButton = createButton('Submit')
+    spamProtectionButton.position(200,240)
+    spamProtectionButton.mouseClicked(()=>{
+        if(spamProtection == spamProtectionBox.value()){
+            console.log(spamProtection)
+            executeTransaction();
+        }
+    })
+}
+
+function executeTransaction(){
+    spamProtectionButton.hide()
+    spamProtectionBox.hide()
+    spamProtectionLabel.hide()
+database.ref("transactionAccounts/"+a+"/password").once('value').then((snapshot)=>{
+    if(snapshot.val() != null){
+        console.log("yay")
+        pkt = snapshot.val()
+        console.log(snapshot.val())
+        database.ref('transactionAccounts/'+b+'/password').once('value').then((snapshota)=>{
+            if(snapshota.val()!= null){
+                console.log('yay')
+                if(c==pkt){
+                    console.log("correct password")
+                    database.ref("transactionAccounts/"+a+"/affiliated").once('value').then((snapshot)=>{
+                        e = snapshot.val()
+                        database.ref("people/"+e+"/stars").once('value').then((snapshot)=>{
+                            h = snapshot.val()
+                            if(d-3<h){
+                                database.ref("transactionAccounts/"+b+'/affiliated').once('value').then((snapshot)=>{
+                                    f = snapshot.val()
+                                    database.ref("people/"+f+"/stars").once('value').then((snapshot)=>{
+                                        g = d+snapshot.val()
+                                        console.log(g)
+                                        database.ref('people/'+f).update({
+                                            'stars':g
+                                        })
+                                        j = h-d-3
+
+                                        database.ref('people/'+e).update({
+                                            'stars':j
+                                        })
+
+                                        errorMessageLabel = createElement('p',"Success!")
+                                        errorMessageLabel.position(200,150)
+
+                                        reloadButton = createButton('Make another transaction!')
+                                        reloadButton.position(200,200)
+                                        reloadButton.mouseClicked(()=>{
+                                            document.location.reload(true);
+                                        })
+                                        
+                                        
+                                    })
+                                    
+                                })
+                                
+    
+                            }
+                        })
+                    })
+                    
+                    
+                    
+                }else{
+                    errorMessageLabel = createElement('p',"Sorry, the password is incorrect. Try again.")
+        errorMessageLabel.position(200,150)
+                }
+            }else{
+                console.log('nay')
+                errorMessageLabel = createElement('p',"Sorry, you inputted the reciever's name incorrectly. Check your format and spelling and try again.")
+        errorMessageLabel.position(200,150)
+            }
+        })
+    }else{
+        console.log("nay")
+        errorMessageLabel = createElement('p','Sorry, you inputted your name incorrectly. Check your format and spelling and try again.')
+        errorMessageLabel.position(200,150)
+    }
+})
+
+}
